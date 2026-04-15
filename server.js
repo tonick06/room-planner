@@ -13,7 +13,7 @@ const { Pool } = pkg;
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
 const app = express();
-app.use(cors({ origin: /^http:\/\/localhost(:\d+)?$/ }));
+app.use(cors({ origin: [/^http:\/\/localhost(:\d+)?$/, /\.vercel\.app$/] }));
 app.use(express.json({ limit: "10mb" }));
 
 // ── Auth middleware ──────────────────────────────────────────────────────────
