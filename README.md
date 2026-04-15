@@ -1,16 +1,60 @@
-# React + Vite
+# Room Planner
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A full-stack interactive room planning application built with React, Node.js, and PostgreSQL.
 
-Currently, two official plugins are available:
+**Live demo:** https://room-planner-tau.vercel.app
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+## Features
 
-## React Compiler
+- **Draw rooms** — click to place corners, snap to grid, close to form a polygon
+- **Multi-room support** — plan an entire floor with multiple rooms on one canvas
+- **Furniture placement** — add, drag, rotate, and resize items with collision detection
+- **Doors & windows** — click any wall to place with arc visualisation
+- **AI floor plan import** — upload an image and Gemini AI automatically traces the room outline and reads real-world dimensions
+- **Save & load** — floor plans saved per user to PostgreSQL
+- **Export** — download your floor plan as a PNG
+- **Dark/light theme** — persistent theme preference
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Tech Stack
 
-## Expanding the ESLint configuration
+| Layer | Technology |
+|-------|------------|
+| Frontend | React 19, Vite, SVG canvas |
+| Backend | Node.js, Express |
+| Database | PostgreSQL (Neon) |
+| Auth | JWT + bcrypt |
+| AI | Google Gemini 2.5 Flash |
+| Deployment | Vercel (frontend) + Render (backend) |
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+## Running Locally
+
+**Prerequisites:** Node.js, PostgreSQL
+
+```bash
+# Install dependencies
+npm install
+
+# Set up environment variables
+cp .env.example .env
+# Fill in GEMINI_API_KEY, DATABASE_URL, JWT_SECRET, VITE_API_URL
+
+# Start backend
+node server.js
+
+# Start frontend (separate terminal)
+npm run dev
+```
+
+**Database setup** — run `setup.sql` against your PostgreSQL instance:
+```bash
+psql -U postgres -f setup.sql
+```
+
+## Environment Variables
+
+| Variable | Description |
+|----------|-------------|
+| `GEMINI_API_KEY` | Google Gemini API key |
+| `DATABASE_URL` | PostgreSQL connection string |
+| `JWT_SECRET` | Secret key for signing JWTs |
+| `VITE_API_URL` | Backend URL (e.g. `http://localhost:3001`) |
