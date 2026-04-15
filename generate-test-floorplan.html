@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html>
+<head><title>Generate Test Floor Plan</title></head>
+<body style="background:#eee;display:flex;flex-direction:column;align-items:center;padding:20px;font-family:sans-serif">
+<canvas id="c" width="900" height="700" style="background:#fff;box-shadow:0 2px 12px #0004"></canvas>
+<br>
+<button onclick="download()" style="padding:10px 24px;font-size:15px;cursor:pointer">Download floor-plan-test.png</button>
+<script>
+  const canvas = document.getElementById('c');
+  const ctx = canvas.getContext('2d');
+  const W = 900, H = 700;
+  const S = 80; // 1 metre = 80px
+  const ox = 60, oy = 60;
+  const WALL = 8;
+
+  function m(v) { return v * S; }
+
+  // White background
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, W, H);
+
+  // 0.5m grid
+  ctx.strokeStyle = '#eeeeee';
+  ctx.lineWidth = 0.5;
+  for (let x = 0; x < W; x += S / 2) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = 0; y < H; y += S / 2) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+
+  // 1m grid
+  ctx.strokeStyle = '#d8d8d8';
+  ctx.lineWidth = 1;
+  for (let x = 0; x < W; x += S) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+  for (let y = 0; y < H; y += S) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+
+  // Room fills
+  const rooms = [
+    { label: 'Living / Dining', sub: '5.5 × 4.0 m', x: ox,          y: oy,         w: m(5.5), h: m(4.0), fill: '#eef6ff' },
+    { label: 'Kitchen',         sub: '3.5 × 2.5 m', x: ox + m(5.5), y: oy,         w: m(3.5), h: m(2.5), fill: '#fff5ea' },
+    { label: 'Bedroom 1',       sub: '3.5 × 3.0 m', x: ox + m(5.5), y: oy + m(2.5),w: m(3.5), h: m(3.0), fill: '#f5eeff' },
+    { label: 'Bedroom 2',       sub: '3.0 × 3.5 m', x: ox,          y: oy + m(4.0),w: m(3.0), h: m(3.5), fill: '#eeffee' },
+    { label: 'Bathroom',        sub: '2.5 × 3.5 m', x: ox + m(3.0), y: oy + m(4.0),w: m(2.5), h: m(3.5), fill: '#eef6ff' },
+  ];
+
+  rooms.forEach(r => {
+    ctx.fillStyle = r.fill;
+    ctx.fillRect(r.x + WALL / 2, r.y + WALL / 2, r.w - WALL, r.h - WALL);
+  });
+
+  // Outer L-shape walls
+  ctx.strokeStyle = '#222';
+  ctx.lineWidth = WALL;
+  ctx.lineJoin = 'miter';
+  ctx.beginPath();
+  ctx.moveTo(ox,          oy);
+  ctx.lineTo(ox + m(9),   oy);
+  ctx.lineTo(ox + m(9),   oy + m(5.5));
+  ctx.lineTo(ox + m(5.5), oy + m(5.5));
+  ctx.lineTo(ox + m(5.5), oy + m(7.5));
+  ctx.lineTo(ox,          oy + m(7.5));
+  ctx.closePath();
+  ctx.stroke();
+
+  // Interior walls
+  ctx.lineWidth = WALL - 2;
+  [
+    [ox + m(5.5), oy,         ox + m(5.5), oy + m(5.5)], // living/kitchen + bed1
+    [ox + m(5.5), oy + m(2.5),ox + m(9),   oy + m(2.5)], // kitchen/bed1
+    [ox,          oy + m(4.0),ox + m(5.5), oy + m(4.0)], // living/bed2+bath
+    [ox + m(3.0), oy + m(4.0),ox + m(3.0), oy + m(7.5)], // bed2/bath
+  ].forEach(([x1, y1, x2, y2]) => {
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+  });
+
+  // Doors
+  function door(wx, wy, dir) {
+    const DR = 34;
+    // erase wall gap
+    ctx.save();
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = WALL + 4;
+    ctx.beginPath();
+    if (dir === 'r' || dir === 'l') { ctx.moveTo(wx, wy); ctx.lineTo(wx, wy + DR); }
+    else { ctx.moveTo(wx, wy); ctx.lineTo(wx + DR, wy); }
+    ctx.stroke();
+    // swing arc + line
+    ctx.strokeStyle = '#999';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    if (dir === 'r')  ctx.arc(wx, wy,      DR, 0,           Math.PI / 2);
+    if (dir === 'l')  ctx.arc(wx, wy + DR, DR, -Math.PI / 2, Math.PI, true);
+    if (dir === 'd')  ctx.arc(wx, wy,      DR, 0,           Math.PI / 2);
+    if (dir === 'u')  ctx.arc(wx + DR, wy, DR, Math.PI,     Math.PI * 3 / 2);
+    ctx.stroke();
+    ctx.beginPath();
+    if (dir === 'r' || dir === 'l') { ctx.moveTo(wx, wy); ctx.lineTo(wx, wy + DR); }
+    else { ctx.moveTo(wx, wy); ctx.lineTo(wx + DR, wy); }
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  door(ox,                oy + m(2),    'r');  // front door (left wall)
+  door(ox + m(5.5),       oy + m(0.8),  'l');  // kitchen
+  door(ox + m(5.5),       oy + m(3.3),  'l');  // bedroom 1
+  door(ox + m(0.8),       oy + m(4.0),  'd');  // bedroom 2
+  door(ox + m(3.0),       oy + m(5.2),  'r');  // bathroom
+
+  // Windows
+  function win(x1, y1, x2, y2) {
+    ctx.save();
+    ctx.strokeStyle = '#fff'; ctx.lineWidth = WALL + 2;
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    ctx.strokeStyle = '#4af'; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    const mx = (x1 + x2) / 2, my = (y1 + y2) / 2;
+    const horiz = y1 === y2;
+    ctx.beginPath();
+    ctx.moveTo(horiz ? mx : mx - 4, horiz ? my - 4 : my);
+    ctx.lineTo(horiz ? mx : mx + 4, horiz ? my + 4 : my);
+    ctx.stroke();
+    ctx.restore();
+  }
+
+  win(ox + m(1),    oy,           ox + m(3.5),  oy);           // living top
+  win(ox + m(6),    oy,           ox + m(8.5),  oy);           // kitchen top
+  win(ox + m(9),    oy + m(3),    ox + m(9),    oy + m(5));    // bedroom 1 right
+  win(ox,           oy + m(4.8),  ox,           oy + m(6.8));  // bedroom 2 left
+  win(ox + m(1.2),  oy + m(7.5),  ox + m(2.5),  oy + m(7.5)); // bedroom 2 bottom
+
+  // Room labels
+  rooms.forEach(r => {
+    const cx = r.x + r.w / 2, cy = r.y + r.h / 2;
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#333';
+    ctx.font = 'bold 13px Arial';
+    ctx.fillText(r.label, cx, cy - 7);
+    ctx.fillStyle = '#888';
+    ctx.font = '11px Arial';
+    ctx.fillText(r.sub, cx, cy + 9);
+  });
+
+  // Dimension lines
+  function dimLine(x1, y1, x2, y2, label) {
+    const dx = x2 - x1, dy = y2 - y1, len = Math.sqrt(dx * dx + dy * dy);
+    const off = 16;
+    const nx = -dy / len * off, ny = dx / len * off;
+    ctx.save();
+    ctx.strokeStyle = '#e44'; ctx.lineWidth = 1; ctx.fillStyle = '#e44';
+    ctx.font = '10px Arial'; ctx.textAlign = 'center';
+    ctx.beginPath(); ctx.moveTo(x1 + nx, y1 + ny); ctx.lineTo(x2 + nx, y2 + ny); ctx.stroke();
+    [[x1, y1], [x2, y2]].forEach(([x, y]) => {
+      ctx.beginPath(); ctx.moveTo(x + nx * 0.3, y + ny * 0.3); ctx.lineTo(x + nx * 1.7, y + ny * 1.7); ctx.stroke();
+    });
+    ctx.fillText(label, (x1 + x2) / 2 + nx * 2, (y1 + y2) / 2 + ny * 2 + 4);
+    ctx.restore();
+  }
+
+  dimLine(ox, oy - 18, ox + m(9), oy - 18, '9.0 m');
+  dimLine(ox - 18, oy, ox - 18, oy + m(7.5), '7.5 m');
+
+  // Scale bar
+  ctx.fillStyle = '#555'; ctx.font = '11px Arial'; ctx.textAlign = 'left';
+  ctx.strokeStyle = '#555'; ctx.lineWidth = 2;
+  const sb = ox + 140;
+  ctx.beginPath(); ctx.moveTo(sb, H - 22); ctx.lineTo(sb + S, H - 22); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(sb, H - 27); ctx.lineTo(sb, H - 17); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(sb + S, H - 27); ctx.lineTo(sb + S, H - 17); ctx.stroke();
+  ctx.textAlign = 'center';
+  ctx.fillText('1 m', sb + S / 2, H - 28);
+  ctx.textAlign = 'left';
+  ctx.fillText('Scale  1 : 100', ox, H - 20);
+
+  // Title
+  ctx.fillStyle = '#222'; ctx.font = 'bold 16px Arial'; ctx.textAlign = 'center';
+  ctx.fillText('Sample House Floor Plan', W / 2, 32);
+
+  function download() {
+    const a = document.createElement('a');
+    a.download = 'floor-plan-test.png';
+    a.href = canvas.toDataURL('image/png');
+    a.click();
+  }
+</script>
+</body>
+</html>

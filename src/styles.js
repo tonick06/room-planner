@@ -1,0 +1,5 @@
+export const labelSt = { display: "block", fontSize: 9, fontWeight: 500, letterSpacing: "0.06em", textTransform: "uppercase", color: "var(--fg5)", marginBottom: 4, fontFamily: "inherit" };
+export const inputSt = { width: "100%", padding: "6px 10px", fontSize: 12, background: "var(--input-bg)", border: "1px solid var(--input-border)", borderRadius: 6, color: "var(--fg)", outline: "none", fontFamily: "inherit" };
+export const btnPrimSt = { width: "100%", padding: "8px 0", fontSize: 11, fontWeight: 600, letterSpacing: "0.04em", textTransform: "uppercase", background: "var(--accent)", color: "#000", border: "none", borderRadius: 6, cursor: "pointer", fontFamily: "inherit" };
+export const btnSt = { fontSize: 11, padding: "6px 12px", borderRadius: 6, border: "1px solid var(--border3)", background: "var(--bg5)", color: "var(--fg)", cursor: "pointer", fontFamily: "inherit" };
+export const btnSmSt = { fontSize: 10, padding: "3px 8px", borderRadius: 5, border: "1px solid var(--border3)", background: "var(--bg5)", color: "var(--fg)", cursor: "pointer", fontFamily: "inherit" };
