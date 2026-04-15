@@ -2,7 +2,6 @@ import express from "express";
 import cors from "cors";
 import fetch from "node-fetch";
 import dotenv from "dotenv";
-import fs from "fs";
 import pkg from "pg";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
@@ -145,7 +144,6 @@ Your entire response must be only the JSON object, nothing else.`
     );
 
     const rawText = await response.text();
-    fs.writeFileSync("C:/Users/nickt/AppData/Local/Temp/gemini-debug.txt", rawText);
     const data = JSON.parse(rawText);
 
     const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
